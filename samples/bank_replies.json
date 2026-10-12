@@ -1,0 +1,26 @@
+[
+  {
+    "outcome": "accepted",
+    "text": "Dear onboarding team,\n\nWe have reviewed the onboarding form you sent for your client and we are pleased to confirm that it has been accepted. No further information is required.\n\nThe account will be active within three working days.\n\nKind regards,\nClient Onboarding Desk"
+  },
+  {
+    "outcome": "information_requested",
+    "text": "Dear onboarding team,\n\nThank you for the onboarding form. Before we can proceed, please provide the following:\n\n1. Evidence of the origin of the funds used for the purchases of physical assets.\n2. The latest statement of the outstanding mortgage.\n3. Confirmation of whether the client holds accounts with other banks.\n\nKind regards,\nClient Onboarding Desk"
+  },
+  {
+    "outcome": "unclear",
+    "text": "Dear onboarding team,\n\nThank you for your submission. The file is currently with our compliance team and we may come back to you in due course.\n\nKind regards,\nClient Onboarding Desk"
+  },
+  {
+    "outcome": "accepted",
+    "text": "Good morning,\n\nThe form for your client has been approved by our onboarding committee. You can go ahead with the signing.\n\nBest regards,\nPrivate Clients Office"
+  },
+  {
+    "outcome": "information_requested",
+    "text": "Good afternoon,\n\nThe form cannot be accepted until we receive a signed declaration of the client's main source of wealth.\n\nBest regards,\nPrivate Clients Office"
+  },
+  {
+    "outcome": "information_requested",
+    "text": "Hello,\n\nWe need two clarifications on the form:\n- The residential address differs from the one in our records. Which one is current?\n- The rental income looks higher than the amount declared for tax. Can the client explain the difference?\n\nRegards,\nCompliance"
+  }
+]

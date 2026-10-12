@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">Proof of concept &middot; client onboarding for a wealth management fund</p>
+  <h1>Clients send what they have.<br>The agent chases the rest and drafts the paperwork.</h1>
+  <p>It reads the documents, follows up on what is missing and fills the bank's 30-question form with the
+     source of every answer. The employee reviews and approves. Only the employee sends anything to a bank.</p>
+  <div class="doors">
+    <a class="door" href="{{ url_for('portal_start') }}">
+      <span class="round">{{ icon('user') }}</span>
+      <h2>I am a client</h2>
+      <p>Register or sign in, and send your documents.</p>
+      <b>Open the client portal &rarr;</b>
+    </a>
+    <a class="door" href="{{ url_for('board') }}">
+      <span class="round">{{ icon('board') }}</span>
+      <h2>I work in onboarding</h2>
+      <p>See every client, who is waiting on whom, and review the forms.</p>
+      <b>Open the onboarding desk &rarr;</b>
+    </a>
+  </div>
+</section>
+
+<h2>How a file moves</h2>
+<ol class="journey">
+  <li><b>The client registers</b> and sees which three documents are needed. They send them in any order, whenever they have them.</li>
+  <li><b>The agent reads</b> each document as it arrives, tells the client what is still missing and sends reminders.</li>
+  <li><b>The agent drafts the bank form.</b> Every answer quotes its source. What is not in the documents is left empty, never guessed.</li>
+  <li><b>The employee reviews</b> only the answers that need a person, approves the form and sends it to the bank.</li>
+  <li><b>The bank replies.</b> The agent reads the reply and prepares the next step. The employee confirms.</li>
+</ol>
+
+<h2>What runs underneath</h2>
+<div class="parts">
+  <article class="card">{{ icon('flow') }}<h3>Fixed workflow</h3>
+    <p>Nine statuses, always in the same order. The agent never decides where a file goes next.</p></article>
+  <article class="card">{{ icon('search') }}<h3>Document reader</h3>
+    <p>Reads PDFs and photos, then identifies the type and the year of each document.</p></article>
+  <article class="card">{{ icon('file') }}<h3>Form filler</h3>
+    <p>Answers the bank's questions from each document and quotes the sentence each answer comes from.</p></article>
+  <article class="card">{{ icon('shield') }}<h3>Verifier</h3>
+    <p>Plain rules, not a model: the quote must be in the document, and the documents must agree.</p></article>
+  <article class="card">{{ icon('plug') }}<h3>MCP tools</h3>
+    <p>Google Drive, Gmail and Excel are reached through MCP servers. In this demo the three servers are mocks.</p></article>
+  <article class="card">{{ icon('spark') }}<h3>Model</h3>
+    <p>Running on <b>{{ model }}</b>. In production: open models on Prem's confidential inference.</p></article>
+</div>
+{% endblock %}

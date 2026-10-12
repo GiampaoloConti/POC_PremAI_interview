@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Client portal{% endblock %}
+{% block content %}
+<div class="page-head centred">
+  <p class="eyebrow">Client portal</p>
+  <h1>Welcome. Let's open your file.</h1>
+  <p class="lead">Registering takes a minute. You send your documents afterwards, one at a time or all
+     together, whenever you have them.</p>
+</div>
+
+<div class="two">
+  <section class="card">
+    <h2>New client</h2>
+    <form method="post">
+      <label>Your full name <input name="name" required autocomplete="name"></label>
+      <label>Your email address <input name="email" type="email" required autocomplete="email"></label>
+      <button>Create my file</button>
+    </form>
+
+    <h3>What you will need</h3>
+    <ul class="needed">
+      {% for item in needed %}
+      <li><span class="round">{{ icon(item.icon) }}</span><span><b>{{ item.label }}</b><small>{{ item.hint }}</small></span></li>
+      {% endfor %}
+    </ul>
+    <p class="muted">You do not need them to register. If one is missing, we keep your place and remind you.</p>
+  </section>
+
+  <div>
+  <section class="card">
+    <h2>Already registered?</h2>
+    <form method="post" action="{{ url_for('portal_sign_in') }}">
+      <label>Your email address <input name="email" type="email" required autocomplete="email"></label>
+      <button>Open my file</button>
+    </form>
+    <p class="muted">Demo: in the real service we email you a sign-in link instead of opening your file here.</p>
+  </section>
+
+  <section class="card">
+    <h2>Demo clients</h2>
+    <p class="muted">Sign in as a client whose documents are already prepared.</p>
+    <ul class="people">
+      {% for folder, person in demo_clients.items() %}
+      <li>
+        <span class="avatar tone-{{ loop.index % 5 }}">{{ person.name|initials }}</span>
+        <span class="who"><b>{{ person.name }}</b><small>{{ person.story }}</small></span>
+        <form method="post" action="{{ url_for('portal_demo', folder=folder) }}"><button class="secondary">Sign in</button></form>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  </div>
+</div>
+{% endblock %}

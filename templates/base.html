@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Client onboarding{% endblock %}</title>
+  {# While the agent is working, the page reloads by itself until the work is done. #}
+  {% if refresh %}<meta http-equiv="refresh" content="2">{% endif %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+{# The employee's pages get the side menu; the home page and the client portal get a top bar. #}
+{% set staff = request.path.startswith('/board') or request.path.startswith('/clients') %}
+<body class="{{ 'staff' if staff else 'public' }}">
+  {% if staff %}
+  <aside class="sidebar">
+    <a class="logo" href="{{ url_for('home') }}"><span class="mark">{{ icon('shield') }}</span> Onboarding desk</a>
+    <nav>
+      <a class="active" href="{{ url_for('board') }}">{{ icon('board') }} Status board</a>
+      <a href="{{ url_for('portal_start') }}">{{ icon('user') }} Client portal</a>
+    </nav>
+    <div class="demo-tools">
+      <p class="eyebrow">Demo tools</p>
+      <form method="post" action="{{ url_for('demo_clients') }}"><button>Add the demo clients</button></form>
+      <form method="post" action="{{ url_for('demo_next_day') }}"><button>Skip to the next day</button></form>
+      <form method="post" action="{{ url_for('demo_reset') }}"><button>Start again from empty</button></form>
+    </div>
+    <p class="model">{{ icon('spark') }} <span>Model in use<b>{{ model }}</b></span></p>
+  </aside>
+  {% else %}
+  <header class="topbar">
+    <a class="logo" href="{{ url_for('home') }}"><span class="mark">{{ icon('shield') }}</span> Client onboarding</a>
+    <nav>
+      <a href="{{ url_for('portal_start') }}">Client portal</a>
+      <a href="{{ url_for('board') }}">Onboarding desk</a>
+    </nav>
+  </header>
+  {% endif %}
+  <main>
+    {% for message in get_flashed_messages() %}<p class="flash">{{ message }}</p>{% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

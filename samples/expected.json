@@ -1,0 +1,247 @@
+{
+  "as_of_year": 2026,
+  "clients": {
+    "giulia_bianchi": {
+      "name": "Giulia Bianchi",
+      "email": "giulia.bianchi@example.com",
+      "story": "All three documents are ready.",
+      "first_upload": [
+        "bank_statement.pdf",
+        "tax_return.pdf",
+        "portfolio_statement.pdf"
+      ],
+      "missing_after_first_upload": [],
+      "documents": {
+        "bank_statement.pdf": {
+          "type": "bank_statement",
+          "year": 2026
+        },
+        "tax_return.pdf": {
+          "type": "tax_return",
+          "year": 2025
+        },
+        "portfolio_statement.pdf": {
+          "type": "portfolio_statement",
+          "year": 2026
+        }
+      },
+      "conflicts": [],
+      "answers": {
+        "full_name": "Giulia Bianchi",
+        "tax_id": "BNCGLI84C52F205X",
+        "date_of_birth": "12 March 1984",
+        "address": "Via Torino 18, 20123 Milano, Italy",
+        "tax_residence": "Italy",
+        "marital_status": "Married",
+        "dependants": "2",
+        "occupation": "Senior architect",
+        "employer": "Studio Moretti Architetti S.r.l.",
+        "gross_income": "EUR 96,000.00",
+        "net_income": "EUR 63,840.00",
+        "rental_income": "EUR 9,600.00",
+        "capital_gains": "EUR 3,150.00",
+        "tax_paid": "EUR 32,160.00",
+        "bank_name": "Banca Lombarda S.p.A.",
+        "iban": "IT60 X054 2811 1010 0000 0123 456",
+        "closing_balance": "EUR 66,680.25",
+        "total_credits": "EUR 71,400.00",
+        "total_debits": "EUR 52,930.10",
+        "physical_assets_spend": "EUR 18,500.00",
+        "loan_balance": "EUR 142,000.00",
+        "custodian": "Alpina SIM S.p.A.",
+        "portfolio_value": "EUR 412,300.00",
+        "cash_in_portfolio": "EUR 21,300.00",
+        "unrealised_gains": "EUR 38,450.00",
+        "investment_income": "EUR 7,920.00",
+        "source_of_wealth": null,
+        "pep": null,
+        "expected_investment": null,
+        "other_banks": null
+      }
+    },
+    "marco_rossi": {
+      "name": "Marco Rossi",
+      "email": "marco.rossi@example.com",
+      "story": "Only the bank statement so far.",
+      "first_upload": [
+        "bank_statement.pdf"
+      ],
+      "missing_after_first_upload": [
+        "tax_return",
+        "portfolio_statement"
+      ],
+      "documents": {
+        "bank_statement.pdf": {
+          "type": "bank_statement",
+          "year": 2026
+        },
+        "tax_return.pdf": {
+          "type": "tax_return",
+          "year": 2025
+        },
+        "portfolio_statement.pdf": {
+          "type": "portfolio_statement",
+          "year": 2026
+        }
+      },
+      "conflicts": [],
+      "answers": {
+        "full_name": "Marco Rossi",
+        "tax_id": "RSSMRC79T10H501Q",
+        "date_of_birth": "10 December 1979",
+        "address": "Via Appia Nuova 210, 00183 Roma, Italy",
+        "tax_residence": "Italy",
+        "marital_status": "Single",
+        "dependants": "0",
+        "occupation": "Software engineering manager",
+        "employer": "Tiberina Digital S.p.A.",
+        "gross_income": "EUR 118,000.00",
+        "net_income": "EUR 74,300.00",
+        "rental_income": null,
+        "capital_gains": "EUR 12,400.00",
+        "tax_paid": "EUR 43,700.00",
+        "bank_name": "Credito Romano S.p.A.",
+        "iban": "IT28 W030 6905 0201 0000 0067 890",
+        "closing_balance": "EUR 91,245.80",
+        "total_credits": "EUR 88,500.00",
+        "total_debits": "EUR 61,320.45",
+        "physical_assets_spend": null,
+        "loan_balance": null,
+        "custodian": "Tirreno Investimenti SIM S.p.A.",
+        "portfolio_value": "EUR 655,900.00",
+        "cash_in_portfolio": "EUR 48,200.00",
+        "unrealised_gains": "EUR 72,310.00",
+        "investment_income": "EUR 11,480.00",
+        "source_of_wealth": null,
+        "pep": null,
+        "expected_investment": null,
+        "other_banks": null
+      }
+    },
+    "elena_ferrari": {
+      "name": "Elena Ferrari",
+      "email": "elena.ferrari@example.com",
+      "story": "Sent a tax return that is too old.",
+      "first_upload": [
+        "bank_statement.pdf",
+        "tax_return_2023.pdf",
+        "portfolio_statement.pdf"
+      ],
+      "missing_after_first_upload": [
+        "tax_return"
+      ],
+      "documents": {
+        "bank_statement.pdf": {
+          "type": "bank_statement",
+          "year": 2026
+        },
+        "tax_return_2023.pdf": {
+          "type": "tax_return",
+          "year": 2023
+        },
+        "tax_return_2025.pdf": {
+          "type": "tax_return",
+          "year": 2025
+        },
+        "portfolio_statement.pdf": {
+          "type": "portfolio_statement",
+          "year": 2026
+        }
+      },
+      "conflicts": [],
+      "answers": {
+        "full_name": "Elena Ferrari",
+        "tax_id": "FRRLNE90E55D612K",
+        "date_of_birth": "15 May 1990",
+        "address": "Via dei Serragli 44, 50124 Firenze, Italy",
+        "tax_residence": "Italy",
+        "marital_status": "Married",
+        "dependants": "1",
+        "occupation": "Dermatologist",
+        "employer": "Self-employed",
+        "gross_income": "EUR 142,000.00",
+        "net_income": "EUR 86,900.00",
+        "rental_income": "EUR 14,400.00",
+        "capital_gains": null,
+        "tax_paid": "EUR 55,100.00",
+        "bank_name": "Banca Toscana Popolare S.p.A.",
+        "iban": "IT91 K061 6002 8001 0000 0045 321",
+        "closing_balance": "EUR 128,410.00",
+        "total_credits": "EUR 131,250.00",
+        "total_debits": "EUR 97,840.60",
+        "physical_assets_spend": "EUR 42,000.00",
+        "loan_balance": "EUR 210,000.00",
+        "custodian": "Arno Private Banking S.p.A.",
+        "portfolio_value": "EUR 890,000.00",
+        "cash_in_portfolio": "EUR 35,600.00",
+        "unrealised_gains": "EUR 104,200.00",
+        "investment_income": "EUR 16,750.00",
+        "source_of_wealth": null,
+        "pep": null,
+        "expected_investment": null,
+        "other_banks": null
+      }
+    },
+    "luca_romano": {
+      "name": "Luca Romano",
+      "email": "luca.romano@example.com",
+      "story": "The bank statement and the tax return disagree.",
+      "first_upload": [
+        "bank_statement.pdf",
+        "tax_return.pdf",
+        "portfolio_statement.pdf"
+      ],
+      "missing_after_first_upload": [],
+      "documents": {
+        "bank_statement.pdf": {
+          "type": "bank_statement",
+          "year": 2026
+        },
+        "tax_return.pdf": {
+          "type": "tax_return",
+          "year": 2025
+        },
+        "portfolio_statement.pdf": {
+          "type": "portfolio_statement",
+          "year": 2026
+        }
+      },
+      "conflicts": [
+        "address",
+        "rental_income"
+      ],
+      "answers": {
+        "full_name": "Luca Romano",
+        "tax_id": "RMNLCU75A01L219Z",
+        "date_of_birth": "1 January 1975",
+        "address": "Via Garibaldi 5, 10122 Torino, Italy",
+        "tax_residence": "Italy",
+        "marital_status": "Divorced",
+        "dependants": "2",
+        "occupation": "Company director",
+        "employer": "Romano Costruzioni S.r.l.",
+        "gross_income": "EUR 185,000.00",
+        "net_income": "EUR 108,700.00",
+        "rental_income": "EUR 12,000.00",
+        "capital_gains": "EUR 27,500.00",
+        "tax_paid": "EUR 76,300.00",
+        "bank_name": "Banca Subalpina S.p.A.",
+        "iban": "IT43 P020 0801 0460 0010 0234 567",
+        "closing_balance": "EUR 204,115.30",
+        "total_credits": "EUR 196,800.00",
+        "total_debits": "EUR 143,275.90",
+        "physical_assets_spend": "EUR 65,000.00",
+        "loan_balance": "EUR 380,000.00",
+        "custodian": "Monviso Wealth SIM S.p.A.",
+        "portfolio_value": "EUR 1,240,000.00",
+        "cash_in_portfolio": "EUR 88,400.00",
+        "unrealised_gains": "EUR 215,600.00",
+        "investment_income": "EUR 29,300.00",
+        "source_of_wealth": null,
+        "pep": null,
+        "expected_investment": null,
+        "other_banks": null
+      }
+    }
+  }
+}

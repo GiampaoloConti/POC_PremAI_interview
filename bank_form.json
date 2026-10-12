@@ -1,0 +1,40 @@
+{
+  "name": "Bank onboarding form",
+  "version": "2026-01",
+  "questions": [
+    {"id": "full_name", "section": "Client identity", "text": "Full legal name"},
+    {"id": "tax_id", "section": "Client identity", "text": "Tax identification number"},
+    {"id": "date_of_birth", "section": "Client identity", "text": "Date of birth"},
+    {"id": "address", "section": "Client identity", "text": "Residential address"},
+    {"id": "tax_residence", "section": "Client identity", "text": "Country of tax residence"},
+    {"id": "marital_status", "section": "Client identity", "text": "Marital status"},
+    {"id": "dependants", "section": "Client identity", "text": "Number of dependants"},
+
+    {"id": "occupation", "section": "Income and tax", "text": "Occupation"},
+    {"id": "employer", "section": "Income and tax", "text": "Employer"},
+    {"id": "gross_income", "section": "Income and tax", "text": "Gross annual income"},
+    {"id": "net_income", "section": "Income and tax", "text": "Net annual income"},
+    {"id": "rental_income", "section": "Income and tax", "text": "Annual rental income"},
+    {"id": "capital_gains", "section": "Income and tax", "text": "Capital gains declared in the last tax year"},
+    {"id": "tax_paid", "section": "Income and tax", "text": "Total income tax paid in the last tax year"},
+
+    {"id": "bank_name", "section": "Banking", "text": "Main bank"},
+    {"id": "iban", "section": "Banking", "text": "IBAN of the main account"},
+    {"id": "closing_balance", "section": "Banking", "text": "Account balance at the statement date"},
+    {"id": "total_credits", "section": "Banking", "text": "Total incoming payments in the statement period"},
+    {"id": "total_debits", "section": "Banking", "text": "Total outgoing payments in the statement period"},
+    {"id": "physical_assets_spend", "section": "Banking", "text": "Total spent on physical assets (property, vehicles, art)"},
+    {"id": "loan_balance", "section": "Banking", "text": "Outstanding loans and mortgages"},
+
+    {"id": "custodian", "section": "Investments", "text": "Current custodian or broker"},
+    {"id": "portfolio_value", "section": "Investments", "text": "Total value of the investment portfolio"},
+    {"id": "cash_in_portfolio", "section": "Investments", "text": "Cash held in the investment portfolio"},
+    {"id": "unrealised_gains", "section": "Investments", "text": "Unrealised gains on the portfolio"},
+    {"id": "investment_income", "section": "Investments", "text": "Dividends and interest received in the year"},
+
+    {"id": "source_of_wealth", "section": "Declarations", "text": "Main source of wealth"},
+    {"id": "pep", "section": "Declarations", "text": "Is the client a politically exposed person?"},
+    {"id": "expected_investment", "section": "Declarations", "text": "Amount the client plans to invest with the fund"},
+    {"id": "other_banks", "section": "Declarations", "text": "Other banks where the client holds accounts"}
+  ]
+}

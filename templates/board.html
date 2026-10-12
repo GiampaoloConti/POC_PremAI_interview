@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Status board{% endblock %}
+{% block content %}
+{% set total = columns.values()|map('length')|sum %}
+<div class="page-head">
+  <p class="eyebrow">{{ today.strftime('%A %d %B %Y') }}</p>
+  <h1>Status board</h1>
+</div>
+
+<div class="tiles">
+  {% for title, clients in columns.items() %}
+  <div class="card tile"><b>{{ clients|length }}</b><span>{{ title }}</span></div>
+  {% endfor %}
+  <div class="card tile"><b>{{ total }}</b><span>Clients in total</span></div>
+</div>
+
+{% if not total %}
+<section class="card empty">
+  <span class="round">{{ icon('user') }}</span>
+  <h2>No clients yet</h2>
+  <p class="muted">Add the four demo clients, or register a new client in the client portal.</p>
+  <form method="post" action="{{ url_for('demo_clients') }}"><button>Add the demo clients</button></form>
+</section>
+{% else %}
+<div class="columns">
+  {% for title, clients in columns.items() %}
+  <section>
+    <h2>{{ title }} <span class="count">{{ clients|length }}</span></h2>
+    {% for client in clients %}
+    <a class="card person" href="{{ url_for('client_page', client_id=client.id) }}">
+      <span class="avatar tone-{{ client.id % 5 }}">{{ client.name|initials }}</span>
+      <span class="who"><b>{{ client.name }}</b>
+        <span class="pill status-{{ client.status }}">{{ statuses[client.status].label }}</span></span>
+      <p>{{ client.detail }}</p>
+      {% if client.waiting_on %}<small class="muted">Waiting on the {{ client.waiting_on|lower }}</small>{% endif %}
+    </a>
+    {% else %}
+    <p class="nobody">Nobody here.</p>
+    {% endfor %}
+  </section>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

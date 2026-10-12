@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+{% block title %}{{ client.name }}{% endblock %}
+
+{# Where an answer comes from: the document and the sentence, with a link that highlights it. #}
+{% macro source(item) %}
+  <small class="source">From <a href="{{ url_for('document', client_id=client.id, filename=item.source, quote=item.quote) }}" target="_blank">{{ item.source }}</a>:
+    &ldquo;{{ item.quote }}&rdquo;</small>
+{% endmacro %}
+
+{% macro bank_reply() %}
+  <h3>The bank's reply</h3>
+  <pre class="quote">{{ client.bank_reply }}</pre>
+  {% if bank_requests %}
+    <p>The agent read this as a request for:</p>
+    <ul>{% for item in bank_requests %}<li>{{ item }}</li>{% endfor %}</ul>
+  {% endif %}
+{% endmacro %}
+
+{% macro drafts_to_approve() %}
+  {% for email in drafts %}
+  <form class="draft" method="post" action="{{ url_for('send_email', email_id=email.id) }}">
+    <h3>{{ icon('mail') }} Message to the client, waiting for your approval</h3>
+    <p class="muted">Written by the agent: &ldquo;{{ email.subject }}&rdquo;. Nothing is sent until you approve, and you can edit the text.</p>
+    <textarea name="body" rows="9">{{ email.body }}</textarea>
+    <button>Approve and send to {{ client.email }}</button>
+  </form>
+  {% endfor %}
+{% endmacro %}
+
+{% macro decide(outcome, label, style="secondary") %}
+  <form method="post" action="{{ url_for('bank_outcome', client_id=client.id) }}">
+    <button class="{{ style }}" name="outcome" value="{{ outcome }}">{{ label }}</button>
+  </form>
+{% endmacro %}
+
+{% block content %}
+{% set attention = conflicts|length + unverified|length + missing|length %}
+<a class="back" href="{{ url_for('board') }}">&larr; All clients</a>
+
+<header class="profile">
+  <span class="avatar big tone-{{ client.id % 5 }}">{{ client.name|initials }}</span>
+  <div>
+    <h1>{{ client.name }}</h1>
+    <p class="muted">{{ client.email }} &middot; registered {{ client.created_at|when }}</p>
+  </div>
+  <span class="pill status-{{ client.status }}">{{ statuses[client.status].label }}</span>
+</header>
+
+<ol class="tracker">
+  {% for name in stages %}
+  <li class="{{ 'done' if loop.index0 < stage or client.status == 'onboarded' else 'current' if loop.index0 == stage }}">{{ name }}</li>
+  {% endfor %}
+</ol>
+
+<div class="split">
+<div>
+  {# One card that always says what happens next, and who has to act. #}
+  <section class="card task">
+  {% if client.busy %}
+    <p class="eyebrow">Agent at work</p>
+    <h2>The agent is working on this file</h2>
+    <p class="working">This page updates by itself.</p>
+  {% else %}
+    {% if client.alert %}<p class="flash">{{ client.alert }}</p>{% endif %}
+
+    {% if client.status in ('started', 'documents_complete', 'form_drafted') %}
+      <p class="eyebrow">Your next step</p>
+      <h2>The agent stopped before it finished</h2>
+      <p>The documents are saved. Let the agent try again, or continue by hand.</p>
+      <form method="post" action="{{ url_for('retry', client_id=client.id) }}"><button>Let the agent try again</button></form>
+
+    {% elif client.status == 'awaiting_documents' %}
+      <p class="eyebrow">Nothing for you to do</p>
+      <h2>Waiting for the client's documents</h2>
+      <p>The agent told the client what is missing and reminds them automatically.
+         Reminders sent so far: {{ client.reminders_sent }} of {{ reminders }}.</p>
+
+    {% elif client.status == 'in_review' and client.form_approved %}
+      <p class="eyebrow">Your next step</p>
+      <h2>Send the form to the bank</h2>
+      <p>You approved the form. Download it, send it to the bank as you do today, then confirm here.</p>
+      <div class="buttons">
+        <a class="button" href="{{ url_for('export', client_id=client.id) }}">Download the form (Excel)</a>
+        <form method="post" action="{{ url_for('sent_to_bank', client_id=client.id) }}"><button>I have sent it to the bank</button></form>
+        <form method="post" action="{{ url_for('reopen', client_id=client.id) }}"><button class="secondary">Change the form</button></form>
+      </div>
+
+    {% elif client.status == 'in_review' %}
+      <p class="eyebrow">Your next step</p>
+      <h2>{{ 'Check %d answers, then approve the form'|format(attention) if attention else 'Have a last look, then approve the form' }}</h2>
+      <p>The agent filled {{ settled|length }} of the {{ settled|length + attention }} answers from the documents
+         and checked each one against its source. Only the answers below need a person.</p>
+      {% if client.bank_reply %}{{ bank_reply() }}{% endif %}
+      {{ drafts_to_approve() }}
+
+    {% elif client.status == 'sent_to_bank' and not client.bank_reply %}
+      <p class="eyebrow">Waiting for the bank</p>
+      <h2>The form is with the bank</h2>
+      <p>When the bank replies, paste its email here and the agent will read it.</p>
+      <form method="post" action="{{ url_for('bank_reply', client_id=client.id) }}">
+        <textarea name="text" rows="5" placeholder="Paste the bank's email here"></textarea>
+        <div class="buttons">
+          <button>Read this reply</button>
+          <span class="muted">or try a sample reply:</span>
+          <button class="secondary" name="sample" value="accepted">Accepted</button>
+          <button class="secondary" name="sample" value="information_requested">Needs information</button>
+          <button class="secondary" name="sample" value="unclear">Unclear</button>
+        </div>
+      </form>
+
+    {% elif client.status == 'sent_to_bank' %}
+      <p class="eyebrow">Your next step</p>
+      <h2>What did the bank decide?</h2>
+      {{ bank_reply() }}
+      <div class="buttons">
+        {{ decide('accepted', 'The bank accepted', '') }}
+        {{ decide('information_requested', 'The bank needs information', '') }}
+        <form method="post" action="{{ url_for('retry', client_id=client.id) }}"><button class="secondary">Let the agent read it again</button></form>
+      </div>
+
+    {% elif client.status == 'bank_needs_information' %}
+      <p class="eyebrow">Your next step</p>
+      <h2>The bank asks for more information</h2>
+      {{ bank_reply() }}
+      {{ drafts_to_approve() }}
+      <div class="buttons"><span class="muted">Did the agent read the reply wrong?</span> {{ decide('accepted', 'The bank accepted') }}</div>
+
+    {% elif client.status == 'bank_accepted' %}
+      <p class="eyebrow">Your next step</p>
+      <h2>The bank accepted the form</h2>
+      <p>Signing follows your usual process. When it is done, confirm here.</p>
+      {{ bank_reply() }}
+      <div class="buttons">
+        <form method="post" action="{{ url_for('onboarded', client_id=client.id) }}"><button>Confirm: the client is onboarded</button></form>
+        <span class="muted">Did the agent read the reply wrong?</span> {{ decide('information_requested', 'The bank needs information') }}
+      </div>
+
+    {% elif client.status == 'onboarded' %}
+      <p class="eyebrow">Done</p>
+      <h2>This client is onboarded</h2>
+      <p>Nothing left to do. The steps followed are listed on the right.</p>
+    {% endif %}
+  {% endif %}
+  </section>
+
+  {% if settled or attention %}
+  <section class="card" id="form">
+    <div class="row">
+      <h2>Bank form</h2>
+      {% if client.form_approved %}<span class="pill state-verified">Approved by you</span>{% endif %}
+    </div>
+    <form method="post" action="{{ url_for('save_form', client_id=client.id) }}">
+
+      {% if conflicts %}
+      <div class="group conflict">
+        <h3>{{ icon('alert') }} The documents disagree <span class="count">{{ conflicts|length }}</span></h3>
+        <p class="muted">Two documents give different answers. Choose the right one.</p>
+        {% for row in conflicts %}
+        <fieldset>
+          <legend>{{ row.number }}. {{ row.text }}</legend>
+          {% for option in row.options %}
+          <label class="choice">
+            <input type="radio" name="value_{{ row.id }}" value="{{ option.value }}">
+            <span><b>{{ option.value }}</b>{{ source(option) }}</span>
+          </label>
+          {% endfor %}
+        </fieldset>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if unverified %}
+      <div class="group check">
+        <h3>{{ icon('search') }} The agent could not prove these <span class="count">{{ unverified|length }}</span></h3>
+        <p class="muted">The agent gave an answer, but the sentence it quotes is not in the document. Correct the answer, or confirm it.</p>
+        {% for row in unverified %}
+        <fieldset>
+          <legend>{{ row.number }}. {{ row.text }}</legend>
+          <input name="value_{{ row.id }}" value="{{ row.value }}" aria-label="{{ row.text }}">
+          {{ source(row) }}
+          <label class="tick"><input type="checkbox" name="checked_{{ row.id }}"> This answer is correct</label>
+        </fieldset>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if missing %}
+      <div class="group missing">
+        <h3>{{ icon('mail') }} Not in the documents <span class="count">{{ missing|length }}</span></h3>
+        <p class="muted">The agent never guesses. Ask the client, then type the answers here.</p>
+        {% for row in missing %}
+        <label>{{ row.number }}. {{ row.text }} <input name="value_{{ row.id }}" value="{{ row.value }}"></label>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <details class="all" {{ 'open' if not editable }}>
+        <summary>{{ settled|length }} answers are filled and checked</summary>
+        <table>
+          {% for row in settled %}
+          {% if loop.changed(row.section) %}<tr class="section"><td colspan="4">{{ row.section }}</td></tr>{% endif %}
+          <tr>
+            <td class="muted">{{ row.number }}</td>
+            <td>{{ row.text }}<br><span class="pill state-{{ row.state }}">{{ answer_states[row.state] }}</span></td>
+            <td><input name="value_{{ row.id }}" value="{{ row.value }}" aria-label="{{ row.text }}" {{ 'readonly' if not editable }}></td>
+            <td>{% if row.quote %}{{ source(row) }}{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </table>
+      </details>
+
+      {% if editable %}
+      <div class="buttons">
+        <button class="secondary" name="action" value="save">Save for later</button>
+        <button name="action" value="approve">Approve the form</button>
+        <span class="muted">Approving sends nothing. You send the form to the bank yourself.</span>
+      </div>
+      {% endif %}
+    </form>
+  </section>
+  {% endif %}
+</div>
+
+<aside>
+  <section class="card side">
+    <h3>Documents</h3>
+    <ul class="ticks">
+      {% for item in checklist %}
+      <li class="{{ 'yes' if item.received }}">{{ item.label }}{% if not item.received %}<small>{{ item.note }}</small>{% endif %}</li>
+      {% endfor %}
+    </ul>
+    {% for document in documents %}
+    <p class="file">{{ icon('file') }}
+      <span>{{ document.filename }}<small>{{ describe(document) if document.type else 'Not read yet' }}</small></span>
+      <a href="{{ url_for('document', client_id=client.id, filename=document.filename) }}" target="_blank">Open</a></p>
+    {% endfor %}
+    <p><a href="{{ url_for('portal', token=client.token) }}">See what the client sees &rarr;</a></p>
+  </section>
+
+  <section class="card side">
+    <h3>Emails to the client <span class="count">{{ sent|length }}</span></h3>
+    {% for email in sent %}
+    <details>
+      <summary>{{ email.subject }}<small>{{ email.sent_at|when }}</small></summary>
+      <pre class="quote">{{ email.body }}</pre>
+    </details>
+    {% else %}
+    <p class="muted">Nothing sent yet.</p>
+    {% endfor %}
+  </section>
+
+  {# Every status of the workflow with the time this file reached it: the reviewers' checklist. #}
+  <section class="card side">
+    <h3>Steps followed</h3>
+    <ul class="ticks">
+      {% for key, status in statuses.items() %}
+      <li class="{{ 'yes' if key in reached }}">{{ status.label }}<small>{{ reached[key]|when }}</small></li>
+      {% endfor %}
+    </ul>
+    <details>
+      <summary>Full activity log ({{ log|length }})</summary>
+      <ul class="log">
+        {% for entry in log %}<li><small>{{ entry.at|when }} &middot; {{ entry.actor }}</small>{{ entry.action }}</li>{% endfor %}
+      </ul>
+    </details>
+    <details>
+      <summary>Tool calls through MCP ({{ tool_calls|length }})</summary>
+      <ul class="log">
+        {% for entry in tool_calls %}<li><small>{{ entry.at|when }} &middot; {{ entry.actor }}</small><code>{{ entry.action }}</code></li>{% endfor %}
+      </ul>
+    </details>
+  </section>
+</aside>
+</div>
+{% endblock %}

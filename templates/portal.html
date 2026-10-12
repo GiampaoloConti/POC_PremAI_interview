@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Your onboarding{% endblock %}
+{% block content %}
+<div class="page-head centred">
+  <p class="eyebrow">Your onboarding</p>
+  <h1>Hello {{ client.name.split()[0] }}</h1>
+  {% if client.busy %}
+    <p class="working">We are checking what you sent. This takes a moment; the page updates by itself.</p>
+  {% elif client.status == 'onboarded' %}
+    <p class="lead">Your onboarding is complete. Welcome aboard.</p>
+  {% elif received == slots|length %}
+    <p class="lead">Thank you, we have every document we need. We are preparing your file and will write to
+       you if a detail is missing.</p>
+  {% else %}
+    <p class="lead">Send your documents in any order, whenever you have them. You can close this page and
+       come back later with your email address.</p>
+  {% endif %}
+  <div class="progress">
+    <div class="bar"><span style="width: {{ (received * 100 / slots|length)|int }}%"></span></div>
+    <b>{{ received }} of {{ slots|length }} documents received</b>
+  </div>
+</div>
+
+<div class="slots">
+  {% for slot in slots %}
+  <section class="card slot {{ 'received' if slot.received }}">
+    <span class="round">{{ icon('check' if slot.received else slot.icon) }}</span>
+    <h2>{{ slot.label }}</h2>
+    <p class="muted">{{ slot.hint }}</p>
+    {% if slot.received %}
+      <p class="ok">Received</p>
+      {% for name in slot.files %}<small class="muted">{{ name }}</small>{% endfor %}
+    {% else %}
+      <p class="note">{{ slot.note }}</p>
+      {# Choosing a file sends it straight away. #}
+      <form method="post" enctype="multipart/form-data">
+        <label class="button upload">{{ icon('upload') }} Choose a file
+          <input type="file" name="files" accept=".pdf,.png,.jpg,.jpeg,.txt" onchange="this.form.submit()">
+        </label>
+      </form>
+      {% if slot.sample %}
+      <form method="post" action="{{ url_for('portal_sample', token=client.token, doc_type=slot.type) }}">
+        <button class="link">Demo: send the prepared {{ slot.sample }}</button>
+      </form>
+      {% endif %}
+    {% endif %}
+  </section>
+  {% endfor %}
+</div>
+
+{% for document in unusable %}
+  <p class="flash">{{ document.filename }}:
+    {{ 'we could not read this file. Could you send a clearer copy?' if document.problem == 'unreadable'
+       else 'this is not one of the three documents above. We have kept it in your file.' }}</p>
+{% endfor %}
+
+{% if messages %}
+<section class="card messages">
+  <h2>{{ icon('mail') }} Messages from the onboarding team</h2>
+  <p class="muted">Copies of the emails sent to {{ client.email }}.</p>
+  {% for email in messages %}
+  <details {{ 'open' if loop.first }}>
+    <summary><b>{{ email.subject }}</b> <span class="muted">{{ email.sent_at|when }}</span></summary>
+    <pre class="quote">{{ email.body }}</pre>
+  </details>
+  {% endfor %}
+</section>
+{% endif %}
+{% endblock %}

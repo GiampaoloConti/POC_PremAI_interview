@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ document.filename }}{% endblock %}
+{% block content %}
+<a class="back" href="{{ url_for('client_page', client_id=client.id) }}">&larr; {{ client.name }}</a>
+<div class="page-head row">
+  <div>
+    <p class="eyebrow">{{ describe(document) if document.type else 'Not read yet' }}</p>
+    <h1>{{ document.filename }}</h1>
+  </div>
+  <a class="button secondary" href="{{ url_for('original_file', client_id=client.id, filename=document.filename) }}">Open the original file</a>
+</div>
+
+{% if quote and found %}
+  <p>This is the text the agent read. The sentence the answer comes from is <a href="#quote">highlighted</a>.</p>
+{% elif quote %}
+  <p class="flash">This text is not in the document: &ldquo;{{ quote }}&rdquo;</p>
+{% else %}
+  <p class="muted">This is the text the agent read.</p>
+{% endif %}
+
+<pre class="card document">{{ body }}</pre>
+{% endblock %}
