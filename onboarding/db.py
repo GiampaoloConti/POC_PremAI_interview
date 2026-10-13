@@ -1,12 +1,14 @@
 """The small database behind the status board and the audit log (SQLite, a single file)."""
+import logging
 import shutil
 import sqlite3
 from contextlib import closing
 from datetime import datetime, timedelta
-from pathlib import Path
 
-DATA = Path(__file__).parent / "data"
-DATABASE = DATA / "onboarding.db"
+from onboarding import config
+
+DATABASE = config.DATA / "onboarding.db"
+audit = logging.getLogger("onboarding.audit")
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS clients (
@@ -76,7 +78,7 @@ def connect():
 
 
 def init():
-    DATA.mkdir(exist_ok=True)
+    config.DATA.mkdir(exist_ok=True)
     with closing(connect()) as connection:
         connection.executescript(SCHEMA)
 
@@ -111,13 +113,15 @@ def skip_day():
 
 
 def log(client_id, actor, action, status=None):
-    """Audit log: who did what, and when."""
+    """Audit log: who did what, and when. Every entry also goes to the log file."""
     run("INSERT INTO audit (client_id, at, actor, action, status) VALUES (?, ?, ?, ?, ?)",
         client_id, timestamp(), actor, action, status)
+    audit.info("%s: %s", actor, action, extra={"client": client_id})
 
 
 def reset():
     """Empty the database and delete the uploaded files (demo only)."""
     for table in ("clients", "documents", "answers", "emails", "audit", "settings"):
         run(f"DELETE FROM {table}")
-    shutil.rmtree(DATA / "files", ignore_errors=True)
+    shutil.rmtree(config.DATA / "files", ignore_errors=True)
+    audit.warning("Demo reset: every client, document and email was deleted")

@@ -1,17 +1,17 @@
 """Mock Google Drive MCP server: one folder per client.
 
 It is a real MCP server with the tools the workflow needs. Only the storage is fake: files go
-to data/files/ on this machine instead of Google Drive.    Run it alone:  python mcp_drive.py
+to data/files/ on this machine instead of Google Drive.    Run it alone:  python -m onboarding.mcp_drive
 """
 import base64
 import re
 
 from mcp.server.mcpserver import MCPServer
 
-import db
+from onboarding import config
 
 server = MCPServer("google-drive", log_level="WARNING")
-FILES = db.DATA / "files"
+FILES = config.DATA / "files"
 
 
 def stored_name(filename):

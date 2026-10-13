@@ -7,12 +7,11 @@ In production it is past onboardings: the client's documents and the form the em
 Run it after every change to a prompt, a model or a rule, and compare the numbers.
 """
 import json
-from pathlib import Path
 
-import steps
-import verifier
+from onboarding import config, steps, verifier
 
-SAMPLES = Path(__file__).parent / "samples"
+config.start_logging()      # with a real model, every call is logged with its request id and tokens
+SAMPLES = config.SAMPLES
 test_set = json.loads((SAMPLES / "expected.json").read_text())
 bank_replies = json.loads((SAMPLES / "bank_replies.json").read_text())
 oldest_year = test_set["as_of_year"] - 1

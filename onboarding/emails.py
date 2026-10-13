@@ -4,10 +4,9 @@ Welcome and reminder emails are fixed templates and go out on their own. Anythin
 draft that an employee approves. Everything leaves through the Gmail MCP server, which only
 knows how to write to a client's registered address.
 """
-import db
-import tools
+from onboarding import config, db, tools
 
-PORTAL_LINK = "http://localhost:8000/portal/{token}"
+PORTAL_LINK = config.PUBLIC_URL + "/portal/{token}"
 
 WELCOME = """Dear {first_name},
 

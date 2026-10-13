@@ -5,16 +5,20 @@ inference, which speaks the OpenAI chat format), copy this file and rewrite that
 """
 import base64
 import json
+import logging
 import mimetypes
-import os
+import time
 
 import anthropic
 
-MODEL_ID = os.environ.get("ANTHROPIC_MODEL", "claude-opus-5-5")
+from onboarding import config
+
+MODEL_ID = config.MODEL_ID
 PROMPT_VERSION = "v1"
 MODEL = f"{MODEL_ID}, prompts {PROMPT_VERSION}"
 
 client = anthropic.Anthropic()      # reads ANTHROPIC_API_KEY
+log = logging.getLogger(__name__)
 
 SYSTEM = (
     "You help a wealth management fund onboard new clients. You read client documents and bank "
@@ -23,8 +27,13 @@ SYSTEM = (
 )
 
 
-def ask(prompt, schema=None, attachment=None):
-    """One model call. With a schema the reply is JSON in that shape; without, it is plain text."""
+def ask(job, prompt, schema=None, attachment=None):
+    """One model call. With a schema the reply is JSON in that shape; without, it is plain text.
+
+    The log gets one line per call: which job, the provider's request id, tokens and time.
+    The prompt and the reply are never logged: they hold the client's data.
+    """
+    started = time.monotonic()
     content = [{"type": "text", "text": prompt}]
     if attachment:
         content.insert(0, attachment)
@@ -38,6 +47,9 @@ def ask(prompt, schema=None, attachment=None):
         messages=[{"role": "user", "content": content}],
         output_config=output_config,
     )
+    log.info("%s: request %s, %s tokens in, %s tokens out, %.1f s, %s (%s)", job, response._request_id,
+             response.usage.input_tokens, response.usage.output_tokens, time.monotonic() - started,
+             response.stop_reason, MODEL)
     if response.stop_reason != "end_turn":      # cut short or declined: do not use a partial answer
         raise RuntimeError(f"the model did not finish its answer ({response.stop_reason})")
     text = next(block.text for block in response.content if block.type == "text")
@@ -51,6 +63,7 @@ def shape(**fields):
 
 def classify_document(text):
     return ask(
+        "classify_document",
         "What kind of document is this, and which year does it cover?\n"
         "- bank_statement: a statement of a bank current account\n"
         "- tax_return: an income tax return\n"
@@ -69,6 +82,7 @@ def extract_answers(text, questions):
     answer = shape(id={"type": "string", "enum": [q["id"] for q in questions]},
                    value={"type": "string"}, quote={"type": "string"})
     reply = ask(
+        "extract_answers",
         "Below are the questions of a bank form and one document from a client.\n"
         "Answer only the questions that this document answers explicitly. For each one give:\n"
         "- id: the id of the question\n"
@@ -84,6 +98,7 @@ def extract_answers(text, questions):
 def draft_client_email(client_name, items, reason):
     item_list = "\n".join(f"- {item}" for item in items)
     return ask(
+        "draft_client_email",
         f"Write a short, friendly email to our client {client_name}.\n"
         f"What to explain first: {reason}\n"
         "Then ask for exactly the items below, as a numbered list, in plain words that someone "
@@ -95,6 +110,7 @@ def draft_client_email(client_name, items, reason):
 
 def read_bank_reply(text):
     return ask(
+        "read_bank_reply",
         "This email is a bank's reply to a client onboarding form we sent.\n"
         "- outcome: 'accepted' if the bank accepts the form and needs nothing more, "
         "'information_requested' if it asks for anything before it can proceed, "
@@ -116,7 +132,8 @@ def transcribe(filename, content):
         attachment = {"type": "image",
                       "source": {"type": "base64", "media_type": mimetypes.guess_type(filename)[0], "data": data}}
     try:
-        text = ask("Transcribe all the text of this document exactly as it is written, line by line. "
+        text = ask("transcribe",
+                   "Transcribe all the text of this document exactly as it is written, line by line. "
                    "Reply with the text only. If you cannot read the document, reply UNREADABLE.",
                    attachment=attachment)
     except anthropic.BadRequestError:       # the file is damaged or not really an image

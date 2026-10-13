@@ -1,12 +1,12 @@
 """Mock Excel MCP server: writes a real .xlsx workbook into the client's folder.
 
-Run it alone:  python mcp_excel.py
+Run it alone:  python -m onboarding.mcp_excel
 """
 from mcp.server.mcpserver import MCPServer
 from openpyxl import Workbook
 from openpyxl.styles import Font
 
-from mcp_drive import FILES, stored_name
+from onboarding.mcp_drive import FILES, stored_name
 
 server = MCPServer("excel", log_level="WARNING")
 

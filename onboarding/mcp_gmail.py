@@ -3,11 +3,11 @@
 Every tool takes a client id and the server looks up the registered address itself. No tool
 accepts a free recipient, so the agent cannot write to a bank or to a stranger.
 Only the delivery is fake: emails are kept in the database instead of being sent.
-Run it alone:  python mcp_gmail.py
+Run it alone:  python -m onboarding.mcp_gmail
 """
 from mcp.server.mcpserver import MCPServer
 
-import db
+from onboarding import db
 
 server = MCPServer("gmail", log_level="WARNING")
 

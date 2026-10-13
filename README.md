@@ -1,7 +1,8 @@
 # Client onboarding agent: proof of concept
 
-This is phase 0 of the design document (*Client Onboarding Agent: Design Document*): the full
-onboarding flow on sample clients, to agree on the design before anything touches real data.
+This is phase 0 of the design document ([docs/design_document.pdf](docs/design_document.pdf)):
+the full onboarding flow on sample clients, to agree on the design before anything touches real
+data.
 
 A client registers and sends documents in any order. The agent reads them, tells the client what
 is missing, and drafts the bank's 30-question form with the source of every answer. The employee
@@ -25,22 +26,28 @@ Use a virtual environment as above rather than a shared one such as Anaconda: an
 package there breaks the HTTP library of the Anthropic SDK, and every model call fails with a
 connection error.
 
-It starts in **mock mode**: no key, no network, same result every time. To use a real model:
+## Settings
+
+It starts in **mock mode**: no key, no network, same result every time. To use a real model,
+copy the example settings and put your key in the copy:
 
 ```bash
-export ANTHROPIC_API_KEY=sk-ant-...
-python app.py
+cp .env.example .env
 ```
 
-The key can also live in a `.env` file (ignored by git) holding that one line without `export`;
-load it with `set -a; source .env; set +a` before starting the app. The side menu always shows
+The app reads `.env` when it starts. The file is ignored by git. The side menu always shows
 which model is in use.
 
 | Setting | Effect |
 |---|---|
-| `ANTHROPIC_API_KEY` | When set, the agent uses Claude. When not set, it uses the offline mock. |
+| `ANTHROPIC_API_KEY` | When set, the agent uses Claude. When empty, it uses the offline mock. |
 | `ANTHROPIC_MODEL` | Which Claude model (default `claude-opus-5-5`). A smaller one, such as `claude-haiku-5-5`, answers faster. |
 | `LLM_MODE=mock` | Forces the mock even when a key is set. |
+| `PUBLIC_URL` | The address of the hosted app, used for the links in the emails (default `http://localhost:8000`). |
+| `PORT` | Set by a hosting service. The app then listens on that port and accepts visitors from outside. |
+
+A setting given on the command line wins over the file, so `LLM_MODE=mock python app.py` runs
+the mock once without editing anything.
 
 ## A five-minute demo
 
@@ -81,213 +88,49 @@ The home page has two doors: the client portal and the onboarding desk.
 8. Go back to the client portal and type the same email under **Already registered?**. The file
    opens where it was left.
 
-**The numbers**
+**The trace and the numbers**
 
-9. In a terminal, run `python evaluate.py`.
+9. Open `logs/onboarding.log`, or look at the terminal: every step above left a line. To read
+   the story of one client, run `grep "client=1 " logs/onboarding.log`.
+10. In a terminal, run `python evaluate.py`.
 
-## How it maps to the design document
+## Documentation
 
-| In the design document | In the POC | Code |
-|---|---|---|
-| Upload portal, partial submissions, saved progress | Register, then one slot per document; come back with your email or your personal link | `app.py`, `templates/portal*.html` |
-| Onboarding workflow: fixed steps, one status per client | The nine statuses and the order of the steps | `workflow.py` |
-| Job queue | One background worker that runs the agent's steps | `app.py` (`enqueue`, `worker`) |
-| Document reader | Text from PDFs, vision for scans, then type and year | `steps.read_document` |
-| Form filler, fixed schema | One model call per document; anything off-schema is dropped | `steps.draft_form`, `bank_form.json` |
-| Verifier: rules, not a model | Quote must be in the document, answer must be in the quote, documents must agree | `verifier.py` |
-| Email drafter | Fixed templates for welcome and reminders; drafts for everything else | `emails.py`, `steps.draft_client_email` |
-| Bank reply reader | Accepted, information requested or unclear, plus the list of requests | `steps.read_bank_reply` |
-| Tools: MCP servers for Google Drive, Gmail and Excel | Three MCP servers with mock storage; the workflow calls them for every file, email and export | `mcp_drive.py`, `mcp_gmail.py`, `mcp_excel.py`, `tools.py` |
-| Models | Offline mock or Claude today, Prem next | `llm_mock.py`, `llm_anthropic.py` |
-| Status board | The onboarding desk | `templates/board.html` |
-| Review screen | A client's page: next step, answers that need a person, sources | `templates/client.html` |
-| Audit log | *Steps followed*, the activity log and the tool calls on each client's page | `db.log` |
-| Evaluation | A test set and a metric per step | `evaluate.py`, `samples/expected.json` |
-
-### Statuses
-
-`Started` → `Awaiting documents` → `Documents complete` → `Form drafted` → `In review` →
-`Sent to bank` → `Bank needs information` (back to `In review`) or `Bank accepted` → `Onboarded`
-
-The screens show these as four stages: Documents, Review, Bank, Onboarded. The agent moves a
-file up to `In review` on its own. Every step after that is an employee action. *Steps followed*
-on a client's page lists the nine statuses with the time each was reached; it is read from the
-audit log, so it is also the reviewers' checklist.
-
-### Who may do what
-
-| Action | In the POC |
+| Document | What it covers |
 |---|---|
-| Welcome email and reminders | Automatic, from fixed templates |
-| Questions to the client | Drafted by the agent, sent when the employee clicks *Approve and send* |
-| Sending the form to a bank | The employee, outside the system. There is no code that contacts a bank. |
-| Deciding what a bank reply means | The agent proposes; the employee can overrule, and decides when the agent is unsure |
-| Marking a client as onboarded | The employee only |
-
-### Edge cases you can try
-
-| Case in the design document | How to see it |
-|---|---|
-| A document never arrives | Marco: *Skip to the next day* five times |
-| An answer isn't in the documents | The *Not in the documents* group and the drafted message |
-| Two documents disagree | Luca: address and rental income |
-| Wrong or outdated document | Elena: a 2023 tax return. Sign in as Elena and send the prepared 2025 one. |
-| Poor scan or photo | Upload `samples/extras/tax_return_photo.png` in a document slot. A real model reads it with vision. The mock cannot read images, so the client is asked for a better copy. |
-| The client sends more documents later | Any client's portal page, at any time |
-| A document contains text that looks like instructions | Luca's portfolio statement ends with one. It is read as data. |
-| Ambiguous bank reply | The *Unclear* sample reply |
-| The agent is unavailable | Start with a wrong key: `ANTHROPIC_API_KEY=wrong python app.py`. Files wait with a *Let the agent try again* button and nothing is lost. |
-
-## How the agent is kept honest
-
-The risk the design document puts first is a wrong answer reaching a bank. Four layers sit
-between the model and the bank:
-
-1. **Every answer must quote its source.** The form filler returns a value and the sentence it
-   comes from, or nothing.
-2. **The quote is checked by code** (`verifier.py`). The sentence must be in the document and the
-   value must be in the sentence. If two documents give different values, the answer is left
-   empty and both are shown.
-3. **The employee approves every form.** A form cannot be approved while an answer is empty or
-   still flagged.
-4. **The agent has no tool that reaches a bank.** The Gmail server only writes to a client's
-   registered address, and only a fixed template or a message the employee approved.
-
-Documents are untrusted input. Their text is passed to the model as data inside tags, the reply
-is constrained to a schema, and the code drops anything that is not an answer to a real question.
-
-## The MCP servers
-
-The workflow never touches a file, an email or a spreadsheet directly. It calls a tool on one of
-three MCP servers through `tools.call()`:
-
-| Server | Tools | Mock storage |
-|---|---|---|
-| `mcp_drive.py` (Google Drive) | `upload_file`, `download_file` | A folder per client under `data/files/` |
-| `mcp_gmail.py` (Gmail) | `send_email`, `create_draft`, `send_draft`, `delete_drafts` | The `emails` table |
-| `mcp_excel.py` (Excel) | `create_workbook` | A real `.xlsx` file in the client's folder |
-
-They are real MCP servers: each one starts on its own with `python mcp_gmail.py` and answers any
-MCP client. Only what is behind them is fake. In the app they run in the same process, and
-`tools.py` connects to them with `Client(server)`. To use real servers, pass the client an
-address instead; the workflow does not change.
-
-Two things are worth pointing out:
-
-- **Least privilege is in the tool list.** The Gmail tools take a client id, never a recipient,
-  so there is nothing the agent could call to write to a bank or a stranger.
-- **Every call is recorded.** *Tool calls through MCP* on a client's page lists them, without
-  file contents or email bodies.
-
-The workflow calls the tools itself, in a fixed order. The model never chooses a tool: it only
-reads a document or writes a draft inside a step.
-
-## The two model modes
-
-Both modules expose the same five functions: `classify_document`, `extract_answers`,
-`draft_client_email`, `read_bank_reply` and `transcribe`.
-
-**`llm_mock.py`** uses keyword rules. It understands documents written as `Label: value` lines,
-like the samples. It makes **one mistake on purpose**: it invents an answer to "Main source of
-wealth" with a quote that is in no document. That is why every form in mock mode has one answer
-under *The agent could not prove these*: it shows the verifier doing its job. Remove
-`INVENTED_ANSWER` to turn this off.
-
-**`llm_anthropic.py`** sends each job to Claude. All calls go through one function, `ask()`.
-
-### Moving to Prem
-
-Prem's confidential inference speaks the OpenAI chat format through a local proxy that encrypts
-requests before they leave the machine. To switch: copy `llm_anthropic.py` to `llm_prem.py`,
-replace `ask()`, and import the new module in `steps.py`. The prompts stay the same. A sketch,
-not tested:
-
-```python
-from openai import OpenAI
-
-client = OpenAI(api_key=os.environ["PREM_API_KEY"], base_url="http://127.0.0.1:8787/v1")
-
-def ask(prompt, schema=None, attachment=None):
-    if schema:
-        prompt += "\n\nReply with JSON only, in this shape:\n" + json.dumps(schema)
-    reply = client.chat.completions.create(
-        model=MODEL_ID,
-        messages=[{"role": "system", "content": SYSTEM}, {"role": "user", "content": prompt}],
-    )
-    text = reply.choices[0].message.content
-    return json.loads(text) if schema else text
-```
-
-The rest of the code does not rely on the provider to enforce the schema: `steps.py` checks
-every reply itself.
-
-## Evaluation
-
-```bash
-python evaluate.py
-```
-
-It runs the agent's steps on the test set and prints one line per metric of the design document:
-
-| Metric | What it measures |
-|---|---|
-| Document recognition | Documents identified with the right type and year |
-| Completeness check | Clients whose missing documents were detected |
-| Form answers | Answers equal to the form the employee sent |
-| Conflicts | Disagreements between documents that were flagged |
-| Not-found answers | Answers absent from the documents that were left empty |
-| Invented answers | Invented answers that the verifier flagged |
-| Evidence | Answers whose quoted source is really in the document |
-| Bank replies | Bank replies read correctly |
-
-The test set is four synthetic clients (13 documents, 120 answers) and six bank replies.
-`samples/make_samples.py` writes the documents and the expected form from one description of
-each client, so the two cannot drift apart. In production the test set is past onboardings.
-
-In mock mode the numbers mostly show that the harness works, because the mock's rules were
-written for these documents. Its deliberate mistake shows up as 16/20 on *Not-found answers* and
-4/4 on *Invented answers*: wrong four times, caught four times. With a key set, the same command
-measures the real model in about 30 calls. Run it with two values of `ANTHROPIC_MODEL` to
-compare a large and a small model, as the rollout plan suggests.
-
-A run on `claude-opus-5-5` scored 100% on every metric in about a minute and a half: nothing
-invented, both disagreements flagged, and the instruction hidden in Luca's portfolio statement
-ignored. That shows the pipeline works on clean documents. It says nothing yet about real ones.
-
-`python test_verifier.py` checks the verifier's rules on their own.
-
-## What is simplified
-
-| In the POC | In production |
-|---|---|
-| Mock MCP servers: a local folder, a database table, a local Excel file | Real MCP servers for Google Drive, Gmail and Sheets, with a service account limited to onboarding |
-| The employee pastes the bank's reply and types the client's answers | The agent reads the onboarding mailbox |
-| One worker thread in the web process | A queue and a worker, so that work survives a crash |
-| A button moves the clock forward | A scheduled job runs the reminders once a day |
-| No passwords. A client opens their file with their email address or their personal link; demo clients with one click. Anyone can open the onboarding desk. | A one-time sign-in link sent to the client's email, single sign-on for employees, and expiry on client links |
-| SQLite | A managed database |
-| Claude or a mock | Open-weight models on Prem's confidential inference, in the EU |
-| Simple English documents with one layout | Real statements from many banks, in Italian, tested per layout |
+| [docs/design_document.pdf](docs/design_document.pdf) | The design this POC supports |
+| [docs/architecture.md](docs/architecture.md) | How the POC maps to the design, the statuses, who may do what, the MCP servers, what is simplified |
+| [docs/logging.md](docs/logging.md) | The audit trail and the log: what is recorded, and how to follow one client |
+| [docs/models.md](docs/models.md) | The mock and the real model, and how to move to Prem |
+| [docs/evaluation.md](docs/evaluation.md) | The test set, the metrics and the results |
+| [docs/hosting.md](docs/hosting.md) | Putting the app online |
 
 ## Project layout
 
 ```
-app.py              web pages and the job queue
-workflow.py         statuses and steps: what the client, the agent and the employee do
-steps.py            the agent's steps, without database or web code
-verifier.py         the rules that check every answer
-tools.py            calls a tool on an MCP server and records the call
-mcp_drive.py        mock Google Drive MCP server
-mcp_gmail.py        mock Gmail MCP server
-mcp_excel.py        mock Excel MCP server
-llm_mock.py         offline stand-in for the model
-llm_anthropic.py    the same jobs done by Claude
-emails.py           email templates
-db.py               database, audit log, demo clock
-bank_form.json      the 30 questions (configuration, not code)
-evaluate.py         evaluation on the test set
-test_verifier.py    checks of the verifier
-templates/, static/ the pages and their style
-samples/            demo clients, expected results, bank replies
-data/               created when the app runs: database and uploaded files
+app.py                  starts the app
+evaluate.py             runs the evaluation on the test set
+requirements.txt        the Python packages needed
+.env.example            the settings, to copy to .env
+onboarding/             the application
+    config.py           settings, folders and the log
+    web.py              web pages and the job queue
+    workflow.py         statuses and steps: what the client, the agent and the employee do
+    steps.py            the agent's steps, without database or web code
+    verifier.py         the rules that check every answer
+    tools.py            calls a tool on an MCP server and records the call
+    mcp_drive.py        mock Google Drive MCP server
+    mcp_gmail.py        mock Gmail MCP server
+    mcp_excel.py        mock Excel MCP server
+    llm_mock.py         offline stand-in for the model
+    llm_anthropic.py    the same jobs done by Claude
+    emails.py           email templates
+    db.py               database, audit trail, demo clock
+    bank_form.json      the 30 questions (configuration, not code)
+    templates/, static/ the pages and their style
+tests/                  checks of the verifier
+samples/                demo clients, expected results, bank replies
+docs/                   the design document and the notes on this POC
+data/                   created when the app runs: database and uploaded files
+logs/                   created when the app runs: the log file
 ```

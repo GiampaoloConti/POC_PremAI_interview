@@ -7,10 +7,7 @@ import asyncio
 
 from mcp import Client
 
-import db
-import mcp_drive
-import mcp_excel
-import mcp_gmail
+from onboarding import db, mcp_drive, mcp_excel, mcp_gmail
 
 SERVERS = {"Google Drive": mcp_drive.server, "Gmail": mcp_gmail.server, "Excel": mcp_excel.server}
 

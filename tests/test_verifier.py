@@ -1,5 +1,5 @@
-"""Checks of the verifier's rules.    python test_verifier.py    (or: pytest)"""
-from verifier import check, merge, same_value
+"""Checks of the verifier's rules.    python -m tests.test_verifier    (or: python -m pytest)"""
+from onboarding.verifier import check, merge, same_value
 
 DOCUMENT = """Modello 730 - Income tax return (summary)
 Tax year: 2025

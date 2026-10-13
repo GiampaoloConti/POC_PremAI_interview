@@ -6,18 +6,16 @@ it returns is checked by ordinary code before anything else relies on it.
 """
 import io
 import json
-import os
 from pathlib import Path
 
 from pypdf import PdfReader
 
-import verifier
+from onboarding import config, verifier
 
-# Claude when a key is set, the offline mock otherwise. LLM_MODE=mock forces the mock.
-if os.environ.get("ANTHROPIC_API_KEY") and os.environ.get("LLM_MODE") != "mock":
-    import llm_anthropic as llm
+if config.USE_MOCK:
+    from onboarding import llm_mock as llm
 else:
-    import llm_mock as llm
+    from onboarding import llm_anthropic as llm
 
 MODEL = llm.MODEL
 

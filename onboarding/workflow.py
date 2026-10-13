@@ -8,13 +8,13 @@ The file is in three parts: what the client does, what the agent does, what the 
 """
 import base64
 import json
+import logging
 import secrets
 from datetime import date
 
-import db
-import emails
-import steps
-import tools
+from onboarding import db, emails, steps, tools
+
+log = logging.getLogger(__name__)
 
 # The stage is the simple view of a status, shown as four steps on the screens.
 STATUSES = {
@@ -133,6 +133,9 @@ def advance(client_id):
                f"{flags.count('ok')} answers verified against their source, {flags.count('unverified')} could not "
                f"be verified, {flags.count('conflict')} where documents disagree, "
                f"{flags.count('not_found')} not in the documents")
+        log.info("Answers left to a person: %s", ", ".join(
+            f"{answer['id']} ({answer['flag']})" for answer in answers if answer["flag"] != "ok") or "none",
+            extra={"client": client_id})
         status = set_status(client_id, "form_drafted")
 
     # Email drafter: answers that are not in the documents become questions to the client.
